@@ -208,7 +208,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Install dependencies
-        run: brew install cmake hwloc wget
+        run: brew install cmake hwloc wget automake autoconf libtool
       - name: Build libuv (static x86_64)
         run: |
           UV_VERSION="1.51.0"
@@ -369,7 +369,10 @@ jobs:
             sed -i.bak -e 's|./config |./config no-tests |' -e 's|^make |make build_libs |' build.openssl3.sh
             bash build_deps.sh
             cd ..
-            cmake . -DXMRIG_DEPS=scripts/deps -DCMAKE_MAKE_PROGRAM=gmake
+            sed -i.bak '/XMRIG_OS_FREEBSD/{n;s/set(EXTRA_LIBS kvm pthread)/set(EXTRA_LIBS kvm pthread)\n    elseif (XMRIG_OS_OPENBSD)\n        set(EXTRA_LIBS kvm pthread)/;}' CMakeLists.txt
+            cmake . -DXMRIG_DEPS=scripts/deps -DCMAKE_MAKE_PROGRAM=gmake \
+              -DCMAKE_C_FLAGS="-DMAP_POPULATE=0 -DMAP_HUGETLB=0" \
+              -DCMAKE_CXX_FLAGS="-DMAP_POPULATE=0 -DMAP_HUGETLB=0"
             gmake -j$(sysctl -n hw.ncpu)
             ./xmrig --version
             cp src/config.json .
@@ -436,7 +439,7 @@ jobs:
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace rockylinux:9 /bin/bash -c "
             set -e
             dnf install -y epel-release
-            dnf install -y gcc gcc-c++ make cmake openssl-devel hwloc-devel wget automake libtool autoconf
+            dnf install -y gcc gcc-c++ make cmake openssl-devel hwloc-devel wget automake libtool autoconf libstdc++-static diffutils file
             # Build libuv from source
             UV_VERSION=1.51.0
             wget https://dist.libuv.org/dist/v\${UV_VERSION}/libuv-v\${UV_VERSION}.tar.gz
@@ -468,7 +471,7 @@ jobs:
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace opensuse/leap:15.6 /bin/bash -c "
             set -e
-            zypper --non-interactive install gcc gcc-c++ make cmake tar libopenssl-devel libuv-devel hwloc-devel
+            zypper --non-interactive install gcc gcc-c++ make cmake tar gzip libopenssl-devel libuv-devel hwloc-devel
             cmake .
             make -j\$(nproc)
             cp src/config.json .

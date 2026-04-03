@@ -13,9 +13,6 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
 
   # ─── Ubuntu 20.04 (focal) x64 ─────────────────────────────────────
@@ -23,7 +20,7 @@ jobs:
     name: focal-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Build inside Ubuntu 20.04 container
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace ubuntu:20.04 /bin/bash -c "
@@ -37,7 +34,7 @@ jobs:
             ./xmrig --version
             tar cfz focal-x64.tar.gz xmrig config.json LICENSE
           "
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: focal-x64
           path: focal-x64.tar.gz
@@ -47,7 +44,7 @@ jobs:
     name: ubuntu22.04-linux-x86_64
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -94,7 +91,7 @@ jobs:
     name: noble-x64
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -106,7 +103,7 @@ jobs:
           cp src/config.json .
           ./xmrig --version
           tar cfz noble-x64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: noble-x64
           path: noble-x64.tar.gz
@@ -116,7 +113,7 @@ jobs:
     name: linux-static-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Build static binary in Docker (Ubuntu 12.04)
         run: |
           mkdir -p /tmp/docker
@@ -142,7 +139,7 @@ jobs:
           SCRIPT
           chmod +x /tmp/docker/script.sh
           docker run --rm -i -v /tmp/docker:/tmp/docker -v "${{ github.workspace }}":/workspace ubuntu:12.04 /bin/bash /tmp/docker/script.sh
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: linux-static-x64
           path: linux-static-x64.tar.gz
@@ -152,7 +149,7 @@ jobs:
     name: freebsd-static-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Build on FreeBSD
         uses: vmactions/freebsd-vm@7ca82f79fe3078fecded6d3a2bff094995447bbd  # v1
         with:
@@ -167,7 +164,7 @@ jobs:
             cp src/config.json .
             ./xmrig --version
             tar cfz freebsd-static-x64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: freebsd-static-x64
           path: freebsd-static-x64.tar.gz
@@ -177,7 +174,7 @@ jobs:
     name: macos-arm64
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Install dependencies
         run: brew install cmake libuv openssl hwloc
       - name: Build hwloc (static)
@@ -209,7 +206,7 @@ jobs:
     name: macos-x86_64
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Install dependencies
         run: brew install cmake libuv hwloc
       - name: Build hwloc (static)
@@ -254,7 +251,7 @@ jobs:
     name: windows-x64
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Checkout deps
         run: git clone https://github.com/xmrig/xmrig-deps.git
       - name: Build
@@ -273,7 +270,7 @@ jobs:
           Copy-Item bin\WinRing0\WinRing0x64.sys -Destination .
           Copy-Item bin\WinRing0\LICENSE -Destination WinRing0-LICENSE
           Compress-Archive -Path xmrig.exe, config.json, WinRing0x64.sys, LICENSE, WinRing0-LICENSE -DestinationPath windows-x64.zip
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: windows-x64
           path: windows-x64.zip
@@ -282,7 +279,6 @@ jobs:
   build_windows_gcc:
     name: windows-gcc-x64
     runs-on: windows-2022
-    continue-on-error: true  # TODO: fix build failure — see Actions logs
     defaults:
       run:
         shell: msys2 {0}
@@ -297,7 +293,7 @@ jobs:
             mingw-w64-ucrt-x86_64-7zip
             mingw-w64-ucrt-x86_64-cmake
             git
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Checkout deps
         run: git clone https://github.com/xmrig/xmrig-deps.git
       - name: Build
@@ -309,37 +305,10 @@ jobs:
           cp bin/WinRing0/WinRing0x64.sys .
           cp bin/WinRing0/LICENSE WinRing0-LICENSE
           7z a -tzip -mx windows-gcc-x64.zip xmrig.exe config.json WinRing0x64.sys LICENSE WinRing0-LICENSE
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: windows-gcc-x64
           path: windows-gcc-x64.zip
-
-  # ─── Windows ARM64 (MSVC) ─────────────────────────────────────────
-  build_windows_arm64:
-    name: windows-arm64
-    runs-on: windows-2022
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-      - name: Checkout deps
-        run: git clone https://github.com/xmrig/xmrig-deps.git
-      - name: Build
-        run: |
-          mkdir build
-          cd build
-          cmake .. -G "Visual Studio 17 2022" -A ARM64 -DXMRIG_DEPS=${{ github.workspace }}/xmrig-deps/msvc2022/arm64
-          cmake --build . --config Release
-          cd ..
-      - name: Smoke test
-        run: .\build\Release\xmrig.exe --version
-      - name: Package
-        run: |
-          Copy-Item build\Release\xmrig.exe -Destination .
-          Copy-Item src\config.json -Destination .
-          Compress-Archive -Path xmrig.exe, config.json, LICENSE -DestinationPath windows-arm64.zip
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
-        with:
-          name: windows-arm64
-          path: windows-arm64.zip
 
   # ─── Linux ARM64 (aarch64) ──────────────────────────────────────────
   build_linux_arm64:
@@ -415,7 +384,7 @@ jobs:
       contents: write
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           path: artifacts
 

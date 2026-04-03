@@ -325,4 +325,4 @@ jobs:
             release/*
           generate_release_notes: true
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(github.ref_name, '-RC') }}

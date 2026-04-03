@@ -1,8 +1,8 @@
 # XMRig w/ Salvium Support
 
-Note about this project.  This is specifically for people that are trying to mine Salvium.  I am not rigourously testing this against other coins.  I am only worried about XMR and SAL.
+Note about this project.  This is specifically for people that are trying to mine Salvium.  I am not rigourously testing this against other coins.  I mean, it **should** work, but I am only worried about XMR and SAL.
 
-If Salvium is not a coin you are interested in, I suggest you head to the official [XMRIG repo](https://github.com/xmrig/xmrighttps:/).  It works great for everything else. It also works for SAL with a few caveates.
+If Salvium is not a coin you are interested in, I suggest you head to the official [XMRIG repo](https://github.com/xmrig/xmrighttps:/).  It works great for everything else.
 
 ## Salvium Coin Configuration
 
@@ -42,19 +42,23 @@ In daemon mode (`"daemon": true`), the coin identity activates the full Salvium 
 
 #### Coin Metadata
 
-| Property | Value |
-|---|---|
-| Code | `SAL` |
-| Name | `Salvium` |
-| Algorithm | `rx/0` (RandomX) |
-| Block target | 120 seconds |
-| Coin units | 10^8 (8 decimal places) |
+
+| Property     | Value                   |
+| -------------- | ------------------------- |
+| Code         | `SAL`                   |
+| Name         | `Salvium`               |
+| Algorithm    | `rx/0` (RandomX)        |
+| Block target | 120 seconds             |
+| Coin units   | 10^8 (8 decimal places) |
 
 For More information on Salvium:
-- Salvium: [https://github.com/salvium/salvium](https://github.com/salvium/salvium "https://github.com/salvium/salvium")
-- P2Pool Salvium fork used for the miner build: [https://github.com/mxhess/p2pool-salvium](https://github.com/mxhess/p2pool-salvium "https://github.com/mxhess/p2pool-salvium")
-- Salvium project: [https://salvium.io/](https://salvium.io/ "https://salvium.io/")
 
+- Salvium project: [https://salvium.io/](https://salvium.io/)
+- Salvium: [https://github.com/salvium/salvium](https://github.com/salvium/salvium "https://github.com/salvium/salvium")
+- P2Pool Salvium Info: [https://whiskymine.io/p2pool-setup.html](https://whiskymine.io/p2pool-setup.htmlhttps:/)
+- P2Pool Salvium Fork: [https://gitlab.com/whiskyrelaxing-group/p2pool-salvium-releases](https://gitlab.com/whiskyrelaxing-group/p2pool-salvium-releaseshttps:/)
+
+## Original Readme
 
 [![Github All Releases](https://img.shields.io/github/downloads/xmrig/xmrig/total.svg)](https://github.com/xmrig/xmrig/releases)
 [![GitHub release](https://img.shields.io/github/release/xmrig/xmrig/all.svg)](https://github.com/xmrig/xmrig/releases)

@@ -20,7 +20,7 @@ jobs:
     name: focal-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Build inside Ubuntu 20.04 container
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace ubuntu:20.04 /bin/bash -c "
@@ -34,7 +34,7 @@ jobs:
             ./xmrig --version
             tar cfz focal-x64.tar.gz xmrig config.json LICENSE
           "
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: focal-x64
           path: focal-x64.tar.gz
@@ -44,7 +44,7 @@ jobs:
     name: ubuntu22.04-linux-x86_64
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -56,7 +56,7 @@ jobs:
           cp src/config.json .
           ./xmrig --version
           tar cfz ubuntu22.04-linux-x86_64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ubuntu22.04-linux-x86_64
           path: ubuntu22.04-linux-x86_64.tar.gz
@@ -66,7 +66,7 @@ jobs:
     name: ubuntu22.04-linux-aarch64
     runs-on: ubuntu-22.04-arm
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -81,7 +81,7 @@ jobs:
         run: |
           cp src/config.json .
           tar cfz ubuntu22.04-linux-aarch64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: ubuntu22.04-linux-aarch64
           path: ubuntu22.04-linux-aarch64.tar.gz
@@ -91,7 +91,7 @@ jobs:
     name: noble-x64
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -103,7 +103,7 @@ jobs:
           cp src/config.json .
           ./xmrig --version
           tar cfz noble-x64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: noble-x64
           path: noble-x64.tar.gz
@@ -113,7 +113,7 @@ jobs:
     name: linux-static-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Build static binary in Docker (Ubuntu 12.04)
         run: |
           mkdir -p /tmp/docker
@@ -139,7 +139,7 @@ jobs:
           SCRIPT
           chmod +x /tmp/docker/script.sh
           docker run --rm -i -v /tmp/docker:/tmp/docker -v "${{ github.workspace }}":/workspace ubuntu:12.04 /bin/bash /tmp/docker/script.sh
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: linux-static-x64
           path: linux-static-x64.tar.gz
@@ -149,9 +149,9 @@ jobs:
     name: freebsd-static-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Build on FreeBSD
-        uses: vmactions/freebsd-vm@7ca82f79fe3078fecded6d3a2bff094995447bbd  # v1
+        uses: vmactions/freebsd-vm@v1
         with:
           release: "14.0"
           usesh: true
@@ -164,7 +164,7 @@ jobs:
             cp src/config.json .
             ./xmrig --version
             tar cfz freebsd-static-x64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: freebsd-static-x64
           path: freebsd-static-x64.tar.gz
@@ -174,7 +174,7 @@ jobs:
     name: macos-arm64
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: brew install cmake libuv openssl hwloc
       - name: Build hwloc (static)
@@ -196,7 +196,7 @@ jobs:
         run: ./xmrig --version
       - name: Package
         run: tar cfz macos-aarch64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: macos-aarch64
           path: macos-aarch64.tar.gz
@@ -206,9 +206,20 @@ jobs:
     name: macos-x86_64
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Install dependencies
-        run: brew install cmake libuv hwloc
+        run: brew install cmake hwloc wget
+      - name: Build libuv (static x86_64)
+        run: |
+          UV_VERSION="1.51.0"
+          wget https://dist.libuv.org/dist/v${UV_VERSION}/libuv-v${UV_VERSION}.tar.gz
+          tar xzf libuv-v${UV_VERSION}.tar.gz
+          cd libuv-v${UV_VERSION}
+          sh autogen.sh
+          ./configure --disable-shared --enable-static --host=x86_64-apple-darwin \
+            CC="cc" CFLAGS="-arch x86_64" LDFLAGS="-arch x86_64"
+          make -j$(sysctl -n hw.logicalcpu)
+          cd ..
       - name: Build hwloc (static)
         run: |
           curl -O https://download.open-mpi.org/release/hwloc/v2.12/hwloc-2.12.1.tar.gz
@@ -235,14 +246,16 @@ jobs:
                   -DOPENSSL_INCLUDE_DIR=$PWD/openssl-3.0.16/include \
                   -DOPENSSL_CRYPTO_LIBRARY=$PWD/openssl-3.0.16/libcrypto.a \
                   -DHWLOC_INCLUDE_DIR=hwloc-2.12.1/include \
-                  -DHWLOC_LIBRARY=hwloc-2.12.1/hwloc/.libs/libhwloc.a
+                  -DHWLOC_LIBRARY=hwloc-2.12.1/hwloc/.libs/libhwloc.a \
+                  -DUV_INCLUDE_DIR=$PWD/libuv-v1.51.0/include \
+                  -DUV_LIBRARY=$PWD/libuv-v1.51.0/.libs/libuv.a
           make -j$(sysctl -n hw.logicalcpu)
           cp src/config.json .
       - name: Smoke test
         run: ./xmrig --version
       - name: Package
         run: tar cfz macos-x86_64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: macos-x86_64
           path: macos-x86_64.tar.gz
@@ -252,7 +265,7 @@ jobs:
     name: windows-x64
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Checkout deps
         run: git clone https://github.com/xmrig/xmrig-deps.git
       - name: Build
@@ -271,7 +284,7 @@ jobs:
           Copy-Item bin\WinRing0\WinRing0x64.sys -Destination .
           Copy-Item bin\WinRing0\LICENSE -Destination WinRing0-LICENSE
           Compress-Archive -Path xmrig.exe, config.json, WinRing0x64.sys, LICENSE, WinRing0-LICENSE -DestinationPath windows-x64.zip
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: windows-x64
           path: windows-x64.zip
@@ -284,7 +297,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: msys2/setup-msys2@cafece8e6baf9247cf9b1bf95097b0b983cc558d  # v2
+      - uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
           update: true
@@ -294,7 +307,7 @@ jobs:
             mingw-w64-ucrt-x86_64-7zip
             mingw-w64-ucrt-x86_64-cmake
             git
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Checkout deps
         run: git clone https://github.com/xmrig/xmrig-deps.git
       - name: Build
@@ -306,7 +319,7 @@ jobs:
           cp bin/WinRing0/WinRing0x64.sys .
           cp bin/WinRing0/LICENSE WinRing0-LICENSE
           7z a -tzip -mx windows-gcc-x64.zip xmrig.exe config.json WinRing0x64.sys LICENSE WinRing0-LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: windows-gcc-x64
           path: windows-gcc-x64.zip
@@ -316,7 +329,7 @@ jobs:
     name: linux-arm64
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -331,7 +344,7 @@ jobs:
         run: |
           cp src/config.json .
           tar cfz linux-arm64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: linux-arm64
           path: linux-arm64.tar.gz
@@ -341,9 +354,9 @@ jobs:
     name: openbsd-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Build on OpenBSD
-        uses: vmactions/openbsd-vm@9004791062e748d95cc87e499e77485f91888ce1  # v1
+        uses: vmactions/openbsd-vm@v1
         with:
           release: "7.8"
           usesh: true
@@ -353,7 +366,7 @@ jobs:
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
             cd scripts
-            sed -i.bak 's|./config |./config no-tests |' build.openssl3.sh
+            sed -i.bak -e 's|./config |./config no-tests |' -e 's|^make |make build_libs |' build.openssl3.sh
             bash build_deps.sh
             cd ..
             cmake . -DXMRIG_DEPS=scripts/deps -DCMAKE_MAKE_PROGRAM=gmake
@@ -361,7 +374,7 @@ jobs:
             ./xmrig --version
             cp src/config.json .
             tar cfz openbsd-x64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: openbsd-x64
           path: openbsd-x64.tar.gz
@@ -371,7 +384,7 @@ jobs:
     name: debian12-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Build inside Debian 12 container
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace debian:12 /bin/bash -c "
@@ -385,7 +398,7 @@ jobs:
             ./xmrig --version
             tar cfz debian12-x64.tar.gz xmrig config.json LICENSE
           "
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: debian12-x64
           path: debian12-x64.tar.gz
@@ -395,19 +408,19 @@ jobs:
     name: alpine-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Build inside Alpine container
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace alpine:3.21 /bin/sh -c "
             set -e
-            apk add --no-cache build-base cmake openssl-dev openssl-libs-static libuv-dev libuv-static hwloc-dev linux-headers
-            cmake . -DBUILD_STATIC=ON
+            apk add --no-cache build-base cmake openssl-dev openssl-libs-static libuv-dev libuv-static linux-headers
+            cmake . -DBUILD_STATIC=ON -DWITH_HWLOC=OFF
             make -j\$(nproc)
             cp src/config.json .
             ./xmrig --version
             tar cfz alpine-x64.tar.gz xmrig config.json LICENSE
           "
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: alpine-x64
           path: alpine-x64.tar.gz
@@ -417,20 +430,30 @@ jobs:
     name: rocky9-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Build inside Rocky Linux 9 container
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace rockylinux:9 /bin/bash -c "
             set -e
             dnf install -y epel-release
-            dnf install -y gcc gcc-c++ make cmake openssl-devel libuv-devel hwloc-devel
-            cmake .
+            dnf install -y gcc gcc-c++ make cmake openssl-devel hwloc-devel wget automake libtool autoconf
+            # Build libuv from source
+            UV_VERSION=1.51.0
+            wget https://dist.libuv.org/dist/v\${UV_VERSION}/libuv-v\${UV_VERSION}.tar.gz
+            tar xzf libuv-v\${UV_VERSION}.tar.gz
+            cd libuv-v\${UV_VERSION}
+            sh autogen.sh
+            ./configure --disable-shared
+            make -j\$(nproc)
+            make install
+            cd /workspace
+            cmake . -DCMAKE_PREFIX_PATH=/usr/local
             make -j\$(nproc)
             cp src/config.json .
             ./xmrig --version
             tar cfz rocky9-x64.tar.gz xmrig config.json LICENSE
           "
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: rocky9-x64
           path: rocky9-x64.tar.gz
@@ -440,19 +463,19 @@ jobs:
     name: opensuse-x64
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/checkout@v6
       - name: Build inside openSUSE Leap container
         run: |
           docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace opensuse/leap:15.6 /bin/bash -c "
             set -e
-            zypper --non-interactive install gcc gcc-c++ make cmake libopenssl-devel libuv-devel hwloc-devel
+            zypper --non-interactive install gcc gcc-c++ make cmake tar libopenssl-devel libuv-devel hwloc-devel
             cmake .
             make -j\$(nproc)
             cp src/config.json .
             ./xmrig --version
             tar cfz opensuse-x64.tar.gz xmrig config.json LICENSE
           "
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+      - uses: actions/upload-artifact@v6
         with:
           name: opensuse-x64
           path: opensuse-x64.tar.gz
@@ -483,7 +506,7 @@ jobs:
       contents: write
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts
 

@@ -349,39 +349,6 @@ jobs:
           name: linux-arm64
           path: linux-arm64.tar.gz
 
-  # ─── OpenBSD static x64 ───────────────────────────────────────────
-  build_openbsd:
-    name: openbsd-x64
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Build on OpenBSD
-        uses: vmactions/openbsd-vm@v1
-        with:
-          release: "7.8"
-          usesh: true
-          prepare: |
-            pkg_add cmake git wget gmake libtool bash autoconf%2.71 automake%1.16
-          run: |
-            export AUTOCONF_VERSION=2.71
-            export AUTOMAKE_VERSION=1.16
-            cd scripts
-            sed -i.bak -e 's|./config |./config no-tests |' -e 's|^make |make build_libs |' build.openssl3.sh
-            bash build_deps.sh
-            cd ..
-            cmake . -DXMRIG_DEPS=scripts/deps -DCMAKE_MAKE_PROGRAM=gmake \
-              -DCMAKE_C_FLAGS="-DMAP_POPULATE=0 -DMAP_HUGETLB=0" \
-              -DCMAKE_CXX_FLAGS="-DMAP_POPULATE=0 -DMAP_HUGETLB=0" \
-              -DEXTRA_LIBS="kvm;pthread"
-            gmake -j$(sysctl -n hw.ncpu)
-            ./xmrig --version
-            cp src/config.json .
-            tar cfz openbsd-x64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@v6
-        with:
-          name: openbsd-x64
-          path: openbsd-x64.tar.gz
-
   # ─── Debian 12 (bookworm) x64 ───────────────────────────────────
   build_debian12:
     name: debian12-x64
@@ -498,7 +465,7 @@ jobs:
       - build_windows_x64
       - build_windows_gcc
       - build_linux_arm64
-      - build_openbsd
+
       - build_jammy_arm64
       - build_debian12
       - build_alpine
@@ -528,7 +495,7 @@ jobs:
           cp artifacts/windows-x64/windows-x64.zip                  release/xmrig-${VERSION}-windows-x64.zip
           cp artifacts/windows-gcc-x64/windows-gcc-x64.zip          release/xmrig-${VERSION}-windows-gcc-x64.zip
           cp artifacts/linux-arm64/linux-arm64.tar.gz                 release/xmrig-${VERSION}-linux-arm64.tar.gz
-          cp artifacts/openbsd-x64/openbsd-x64.tar.gz                release/xmrig-${VERSION}-openbsd-x64.tar.gz
+
           cp artifacts/ubuntu22.04-linux-aarch64/ubuntu22.04-linux-aarch64.tar.gz  release/xmrig-${VERSION}-ubuntu22.04-linux-aarch64.tar.gz
           cp artifacts/debian12-x64/debian12-x64.tar.gz              release/xmrig-${VERSION}-debian12-x64.tar.gz
           cp artifacts/alpine-x64/alpine-x64.tar.gz                  release/xmrig-${VERSION}-alpine-x64.tar.gz

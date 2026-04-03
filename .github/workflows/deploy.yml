@@ -306,9 +306,8 @@ jobs:
   build_windows_arm64:
     name: windows-arm64
     runs-on: windows-2022
-    continue-on-error: true  # TODO: fix build failure — see Actions logs
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Checkout deps
         run: git clone https://github.com/xmrig/xmrig-deps.git
       - name: Build
@@ -325,7 +324,7 @@ jobs:
           Copy-Item build\Release\xmrig.exe -Destination .
           Copy-Item src\config.json -Destination .
           Compress-Archive -Path xmrig.exe, config.json, LICENSE -DestinationPath windows-arm64.zip
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: windows-arm64
           path: windows-arm64.zip
@@ -355,200 +354,6 @@ jobs:
           name: linux-arm64
           path: linux-arm64.tar.gz
 
-  # ─── Linux ARMv7 (32-bit) ─────────────────────────────────────────
-  build_linux_armv7:
-    name: linux-armv7
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-      - name: Install cross-compilation toolchain
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git build-essential cmake gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-      - name: Build dependencies from source
-        run: |
-          cd scripts
-          export CC=arm-linux-gnueabihf-gcc
-          export CXX=arm-linux-gnueabihf-g++
-          export CROSS_HOST=arm-linux-gnueabihf
-          # Build libuv with cross toolchain
-          UV_VERSION="1.51.0"
-          mkdir -p deps deps/include deps/lib build && cd build
-          wget https://dist.libuv.org/dist/v${UV_VERSION}/libuv-v${UV_VERSION}.tar.gz -O v${UV_VERSION}.tar.gz
-          tar -xzf v${UV_VERSION}.tar.gz
-          cd libuv-v${UV_VERSION}
-          sh autogen.sh
-          ./configure --disable-shared --host=${CROSS_HOST} CC=${CC}
-          make -j$(nproc)
-          cp -fr include ../../deps
-          cp .libs/libuv.a ../../deps/lib
-          cd ../..
-          # Build OpenSSL with cross toolchain
-          OPENSSL_VERSION="3.0.16"
-          cd build
-          wget https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz -O openssl-${OPENSSL_VERSION}.tar.gz
-          tar -xzf openssl-${OPENSSL_VERSION}.tar.gz
-          cd openssl-${OPENSSL_VERSION}
-          ./Configure linux-armv4 --cross-compile-prefix=arm-linux-gnueabihf- no-shared no-asm no-zlib no-comp no-dgram no-filenames no-cms
-          make -j$(nproc)
-          cp -fr include ../../deps
-          cp libcrypto.a ../../deps/lib
-          cp libssl.a ../../deps/lib
-          cd ../..
-      - name: Build xmrig
-        run: |
-          cmake . -DCMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
-                  -DCMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
-                  -DCMAKE_SYSTEM_NAME=Linux \
-                  -DCMAKE_SYSTEM_PROCESSOR=armv7l \
-                  -DARM_V7=ON \
-                  -DWITH_HWLOC=OFF \
-                  -DXMRIG_DEPS=scripts/deps
-          make -j$(nproc)
-      - name: Package
-        run: |
-          cp src/config.json .
-          tar cfz linux-armv7.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
-        with:
-          name: linux-armv7
-          path: linux-armv7.tar.gz
-
-  # ─── Android ARM64 ────────────────────────────────────────────────
-  build_android_arm64:
-    name: android-arm64
-    runs-on: ubuntu-24.04
-    env:
-      ANDROID_NDK_VERSION: r27c
-      ANDROID_API: 24
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-      - name: Setup Android NDK
-        run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-linux.zip -O ndk.zip
-          unzip -q ndk.zip
-          echo "ANDROID_NDK_ROOT=$PWD/android-ndk-${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
-      - name: Build dependencies from source
-        run: |
-          export TOOLCHAIN="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64"
-          export CC="${TOOLCHAIN}/bin/aarch64-linux-android${ANDROID_API}-clang"
-          export CXX="${TOOLCHAIN}/bin/aarch64-linux-android${ANDROID_API}-clang++"
-          export AR="${TOOLCHAIN}/bin/llvm-ar"
-          export RANLIB="${TOOLCHAIN}/bin/llvm-ranlib"
-          export CROSS_HOST=aarch64-linux-android
-          cd scripts
-          # Build libuv
-          UV_VERSION="1.51.0"
-          mkdir -p deps deps/include deps/lib build && cd build
-          wget https://dist.libuv.org/dist/v${UV_VERSION}/libuv-v${UV_VERSION}.tar.gz -O v${UV_VERSION}.tar.gz
-          tar -xzf v${UV_VERSION}.tar.gz
-          cd libuv-v${UV_VERSION}
-          sh autogen.sh
-          ./configure --disable-shared --host=${CROSS_HOST} CC="${CC}" AR="${AR}" RANLIB="${RANLIB}"
-          make -j$(nproc)
-          cp -fr include ../../deps
-          cp .libs/libuv.a ../../deps/lib
-          cd ../..
-          # Build OpenSSL
-          OPENSSL_VERSION="3.0.16"
-          cd build
-          wget https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz -O openssl-${OPENSSL_VERSION}.tar.gz
-          tar -xzf openssl-${OPENSSL_VERSION}.tar.gz
-          cd openssl-${OPENSSL_VERSION}
-          export PATH="${TOOLCHAIN}/bin:$PATH"
-          ./Configure android-arm64 -D__ANDROID_API__=${ANDROID_API} no-shared no-asm no-zlib no-comp no-dgram no-filenames no-cms
-          make -j$(nproc)
-          cp -fr include ../../deps
-          cp libcrypto.a ../../deps/lib
-          cp libssl.a ../../deps/lib
-          cd ../..
-      - name: Build xmrig
-        run: |
-          cmake . -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
-                  -DANDROID_ABI=arm64-v8a \
-                  -DANDROID_NATIVE_API_LEVEL=${ANDROID_API} \
-                  -DWITH_HWLOC=OFF \
-                  -DWITH_MSR=OFF \
-                  -DWITH_DMI=OFF \
-                  -DXMRIG_DEPS=scripts/deps
-          make -j$(nproc)
-      - name: Package
-        run: |
-          cp src/config.json .
-          tar cfz android-arm64.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
-        with:
-          name: android-arm64
-          path: android-arm64.tar.gz
-
-  # ─── Android ARMv7 ────────────────────────────────────────────────
-  build_android_armv7:
-    name: android-armv7
-    runs-on: ubuntu-24.04
-    env:
-      ANDROID_NDK_VERSION: r27c
-      ANDROID_API: 24
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
-      - name: Setup Android NDK
-        run: |
-          wget -q https://dl.google.com/android/repository/android-ndk-${ANDROID_NDK_VERSION}-linux.zip -O ndk.zip
-          unzip -q ndk.zip
-          echo "ANDROID_NDK_ROOT=$PWD/android-ndk-${ANDROID_NDK_VERSION}" >> $GITHUB_ENV
-      - name: Build dependencies from source
-        run: |
-          export TOOLCHAIN="${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64"
-          export CC="${TOOLCHAIN}/bin/armv7a-linux-androideabi${ANDROID_API}-clang"
-          export CXX="${TOOLCHAIN}/bin/armv7a-linux-androideabi${ANDROID_API}-clang++"
-          export AR="${TOOLCHAIN}/bin/llvm-ar"
-          export RANLIB="${TOOLCHAIN}/bin/llvm-ranlib"
-          export CROSS_HOST=arm-linux-androideabi
-          cd scripts
-          # Build libuv
-          UV_VERSION="1.51.0"
-          mkdir -p deps deps/include deps/lib build && cd build
-          wget https://dist.libuv.org/dist/v${UV_VERSION}/libuv-v${UV_VERSION}.tar.gz -O v${UV_VERSION}.tar.gz
-          tar -xzf v${UV_VERSION}.tar.gz
-          cd libuv-v${UV_VERSION}
-          sh autogen.sh
-          ./configure --disable-shared --host=${CROSS_HOST} CC="${CC}" AR="${AR}" RANLIB="${RANLIB}"
-          make -j$(nproc)
-          cp -fr include ../../deps
-          cp .libs/libuv.a ../../deps/lib
-          cd ../..
-          # Build OpenSSL
-          OPENSSL_VERSION="3.0.16"
-          cd build
-          wget https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz -O openssl-${OPENSSL_VERSION}.tar.gz
-          tar -xzf openssl-${OPENSSL_VERSION}.tar.gz
-          cd openssl-${OPENSSL_VERSION}
-          export PATH="${TOOLCHAIN}/bin:$PATH"
-          ./Configure android-arm -D__ANDROID_API__=${ANDROID_API} no-shared no-asm no-zlib no-comp no-dgram no-filenames no-cms
-          make -j$(nproc)
-          cp -fr include ../../deps
-          cp libcrypto.a ../../deps/lib
-          cp libssl.a ../../deps/lib
-          cd ../..
-      - name: Build xmrig
-        run: |
-          cmake . -DCMAKE_TOOLCHAIN_FILE=${ANDROID_NDK_ROOT}/build/cmake/android.toolchain.cmake \
-                  -DANDROID_ABI=armeabi-v7a \
-                  -DANDROID_NATIVE_API_LEVEL=${ANDROID_API} \
-                  -DARM_V7=ON \
-                  -DWITH_HWLOC=OFF \
-                  -DWITH_MSR=OFF \
-                  -DWITH_DMI=OFF \
-                  -DXMRIG_DEPS=scripts/deps
-          make -j$(nproc)
-      - name: Package
-        run: |
-          cp src/config.json .
-          tar cfz android-armv7.tar.gz xmrig config.json LICENSE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
-        with:
-          name: android-armv7
-          path: android-armv7.tar.gz
-
   # ─── OpenBSD static x64 ───────────────────────────────────────────
   build_openbsd:
     name: openbsd-x64
@@ -558,10 +363,10 @@ jobs:
       - name: Build on OpenBSD
         uses: vmactions/openbsd-vm@9004791062e748d95cc87e499e77485f91888ce1  # v1
         with:
-          release: "7.6"
+          release: "7.8"
           usesh: true
           prepare: |
-            pkg_add cmake git wget autoconf-2.71 automake-1.16.5 libtool pkgconf gmake
+            pkg_add cmake git wget gmake pkgconf libtool autoconf%2.71 automake%1.16
           run: |
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
@@ -589,11 +394,7 @@ jobs:
       - build_macos_x64
       - build_windows_x64
       - build_windows_gcc
-      - build_windows_arm64
       - build_linux_arm64
-      - build_linux_armv7
-      - build_android_arm64
-      - build_android_armv7
       - build_openbsd
       - build_jammy_arm64
     runs-on: ubuntu-latest
@@ -619,11 +420,7 @@ jobs:
           cp artifacts/macos-x86_64/macos-x86_64.tar.gz                           release/xmrig-${VERSION}-macos-x86_64.tar.gz
           cp artifacts/windows-x64/windows-x64.zip                  release/xmrig-${VERSION}-windows-x64.zip
           cp artifacts/windows-gcc-x64/windows-gcc-x64.zip          release/xmrig-${VERSION}-windows-gcc-x64.zip
-          cp artifacts/windows-arm64/windows-arm64.zip               release/xmrig-${VERSION}-windows-arm64.zip
           cp artifacts/linux-arm64/linux-arm64.tar.gz                 release/xmrig-${VERSION}-linux-arm64.tar.gz
-          cp artifacts/linux-armv7/linux-armv7.tar.gz                 release/xmrig-${VERSION}-linux-armv7.tar.gz
-          cp artifacts/android-arm64/android-arm64.tar.gz             release/xmrig-${VERSION}-android-arm64.tar.gz
-          cp artifacts/android-armv7/android-armv7.tar.gz             release/xmrig-${VERSION}-android-armv7.tar.gz
           cp artifacts/openbsd-x64/openbsd-x64.tar.gz                release/xmrig-${VERSION}-openbsd-x64.tar.gz
           cp artifacts/ubuntu22.04-linux-aarch64/ubuntu22.04-linux-aarch64.tar.gz  release/xmrig-${VERSION}-ubuntu22.04-linux-aarch64.tar.gz
 

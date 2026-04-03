@@ -229,6 +229,7 @@ jobs:
       - name: Build
         run: |
           cmake . -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+                  -DCMAKE_SYSTEM_NAME=Darwin \
                   -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
                   -DOPENSSL_ROOT_DIR=$PWD/openssl-3.0.16 \
                   -DOPENSSL_INCLUDE_DIR=$PWD/openssl-3.0.16/include \
@@ -347,11 +348,14 @@ jobs:
           release: "7.8"
           usesh: true
           prepare: |
-            pkg_add cmake git wget gmake pkgconf libtool bash autoconf%2.71 automake%1.16
+            pkg_add cmake git wget gmake libtool bash autoconf%2.71 automake%1.16
           run: |
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16
-            cd scripts && bash build_deps.sh && cd ..
+            cd scripts
+            sed -i.bak 's|./config |./config no-tests |' build.openssl3.sh
+            bash build_deps.sh
+            cd ..
             cmake . -DXMRIG_DEPS=scripts/deps -DCMAKE_MAKE_PROGRAM=gmake
             gmake -j$(sysctl -n hw.ncpu)
             ./xmrig --version
@@ -361,6 +365,97 @@ jobs:
         with:
           name: openbsd-x64
           path: openbsd-x64.tar.gz
+
+  # ─── Debian 12 (bookworm) x64 ───────────────────────────────────
+  build_debian12:
+    name: debian12-x64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - name: Build inside Debian 12 container
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace debian:12 /bin/bash -c "
+            set -e
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update
+            apt-get install -y build-essential cmake libuv1-dev libssl-dev libhwloc-dev
+            cmake .
+            make -j\$(nproc)
+            cp src/config.json .
+            ./xmrig --version
+            tar cfz debian12-x64.tar.gz xmrig config.json LICENSE
+          "
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: debian12-x64
+          path: debian12-x64.tar.gz
+
+  # ─── Alpine Linux x64 (musl) ────────────────────────────────────
+  build_alpine:
+    name: alpine-x64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - name: Build inside Alpine container
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace alpine:3.21 /bin/sh -c "
+            set -e
+            apk add --no-cache build-base cmake openssl-dev openssl-libs-static libuv-dev libuv-static hwloc-dev linux-headers
+            cmake . -DBUILD_STATIC=ON
+            make -j\$(nproc)
+            cp src/config.json .
+            ./xmrig --version
+            tar cfz alpine-x64.tar.gz xmrig config.json LICENSE
+          "
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: alpine-x64
+          path: alpine-x64.tar.gz
+
+  # ─── Rocky Linux 9 x64 (RHEL 9) ────────────────────────────────
+  build_rocky9:
+    name: rocky9-x64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - name: Build inside Rocky Linux 9 container
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace rockylinux:9 /bin/bash -c "
+            set -e
+            dnf install -y epel-release
+            dnf install -y gcc gcc-c++ make cmake openssl-devel libuv-devel hwloc-devel
+            cmake .
+            make -j\$(nproc)
+            cp src/config.json .
+            ./xmrig --version
+            tar cfz rocky9-x64.tar.gz xmrig config.json LICENSE
+          "
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: rocky9-x64
+          path: rocky9-x64.tar.gz
+
+  # ─── openSUSE Leap x64 ──────────────────────────────────────────
+  build_opensuse:
+    name: opensuse-x64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - name: Build inside openSUSE Leap container
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace opensuse/leap:15.6 /bin/bash -c "
+            set -e
+            zypper --non-interactive install gcc gcc-c++ make cmake libopenssl-devel libuv-devel hwloc-devel
+            cmake .
+            make -j\$(nproc)
+            cp src/config.json .
+            ./xmrig --version
+            tar cfz opensuse-x64.tar.gz xmrig config.json LICENSE
+          "
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        with:
+          name: opensuse-x64
+          path: opensuse-x64.tar.gz
 
   # ─── Release ───────────────────────────────────────────────────────
   release:
@@ -378,6 +473,10 @@ jobs:
       - build_linux_arm64
       - build_openbsd
       - build_jammy_arm64
+      - build_debian12
+      - build_alpine
+      - build_rocky9
+      - build_opensuse
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
@@ -404,6 +503,10 @@ jobs:
           cp artifacts/linux-arm64/linux-arm64.tar.gz                 release/xmrig-${VERSION}-linux-arm64.tar.gz
           cp artifacts/openbsd-x64/openbsd-x64.tar.gz                release/xmrig-${VERSION}-openbsd-x64.tar.gz
           cp artifacts/ubuntu22.04-linux-aarch64/ubuntu22.04-linux-aarch64.tar.gz  release/xmrig-${VERSION}-ubuntu22.04-linux-aarch64.tar.gz
+          cp artifacts/debian12-x64/debian12-x64.tar.gz              release/xmrig-${VERSION}-debian12-x64.tar.gz
+          cp artifacts/alpine-x64/alpine-x64.tar.gz                  release/xmrig-${VERSION}-alpine-x64.tar.gz
+          cp artifacts/rocky9-x64/rocky9-x64.tar.gz                  release/xmrig-${VERSION}-rocky9-x64.tar.gz
+          cp artifacts/opensuse-x64/opensuse-x64.tar.gz              release/xmrig-${VERSION}-opensuse-x64.tar.gz
 
       - name: Generate checksums
         run: |

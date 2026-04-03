@@ -208,7 +208,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Install dependencies
-        run: brew install cmake libuv openssl hwloc
+        run: brew install cmake libuv hwloc
       - name: Build hwloc (static)
         run: |
           curl -O https://download.open-mpi.org/release/hwloc/v2.12/hwloc-2.12.1.tar.gz
@@ -217,10 +217,22 @@ jobs:
           ./configure --disable-shared --enable-static --disable-io --disable-libxml2 --host=x86_64-apple-darwin CFLAGS="-arch x86_64" CXXFLAGS="-arch x86_64" LDFLAGS="-arch x86_64"
           make -j$(sysctl -n hw.logicalcpu)
           cd ..
+      - name: Build OpenSSL (static x86_64)
+        run: |
+          OPENSSL_VERSION="3.0.16"
+          wget https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz
+          tar xzf openssl-${OPENSSL_VERSION}.tar.gz
+          cd openssl-${OPENSSL_VERSION}
+          ./Configure darwin64-x86_64-cc no-shared no-asm no-zlib no-comp no-dgram no-filenames no-cms
+          make -j$(sysctl -n hw.logicalcpu)
+          cd ..
       - name: Build
         run: |
           cmake . -DCMAKE_OSX_ARCHITECTURES=x86_64 \
-                  -DOPENSSL_ROOT_DIR=$(brew --prefix openssl) \
+                  -DCMAKE_SYSTEM_PROCESSOR=x86_64 \
+                  -DOPENSSL_ROOT_DIR=$PWD/openssl-3.0.16 \
+                  -DOPENSSL_INCLUDE_DIR=$PWD/openssl-3.0.16/include \
+                  -DOPENSSL_CRYPTO_LIBRARY=$PWD/openssl-3.0.16/libcrypto.a \
                   -DHWLOC_INCLUDE_DIR=hwloc-2.12.1/include \
                   -DHWLOC_LIBRARY=hwloc-2.12.1/hwloc/.libs/libhwloc.a
           make -j$(sysctl -n hw.logicalcpu)
@@ -279,7 +291,7 @@ jobs:
             base-devel
             mingw-w64-ucrt-x86_64-toolchain
             mingw-w64-ucrt-x86_64-7zip
-            cmake
+            mingw-w64-ucrt-x86_64-cmake
             git
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
       - name: Checkout deps
@@ -335,7 +347,7 @@ jobs:
           release: "7.8"
           usesh: true
           prepare: |
-            pkg_add cmake git wget gmake pkgconf libtool autoconf%2.71 automake%1.16
+            pkg_add cmake git wget gmake pkgconf libtool bash autoconf%2.71 automake%1.16
           run: |
             export AUTOCONF_VERSION=2.71
             export AUTOMAKE_VERSION=1.16

@@ -508,17 +508,25 @@ jobs:
           cd release
           sha256sum * > SHA256SUMS
           cat SHA256SUMS
+          echo '## SHA256 Checksums' > ../RELEASE_NOTES.md
+          echo '' >> ../RELEASE_NOTES.md
+          echo '| File | SHA256 |' >> ../RELEASE_NOTES.md
+          echo '|------|--------|' >> ../RELEASE_NOTES.md
+          while read -r hash file; do
+            echo "| \`${file}\` | \`${hash}\` |" >> ../RELEASE_NOTES.md
+          done < SHA256SUMS
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
             gh release upload "$GITHUB_REF_NAME" release/* --clobber
           else
             if [[ "$GITHUB_REF_NAME" == *-* ]]; then
-              gh release create "$GITHUB_REF_NAME" release/* --generate-notes --prerelease
+              gh release create "$GITHUB_REF_NAME" release/* --generate-notes --notes-file RELEASE_NOTES.md --prerelease
             else
-              gh release create "$GITHUB_REF_NAME" release/* --generate-notes
+              gh release create "$GITHUB_REF_NAME" release/* --generate-notes --notes-file RELEASE_NOTES.md
             fi
           fi

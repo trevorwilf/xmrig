@@ -476,6 +476,7 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v6
       - name: Download all artifacts
         uses: actions/download-artifact@v7
         with:
